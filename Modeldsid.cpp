@@ -306,10 +306,24 @@ void damageFunction(double & fd, const r1Tensor<double> &Sigma, const r1Tensor<d
 
      for (int i=0; i<ntens; i++)
           yd1[i]= a1_*trSigma*trSigma*e1[i]+a2_*SigSig[i]+a3_*trSigma*Sigma[i]+a4_*trSigSig*e1[i];
-     
+    /* 
+    cout << " yd1= ";
+    for (int i=0; i<6; i++) {
+        cout << "  " << yd1[i];
+    }
+    cout << endl;
+    */
 
-     matP1(P1,Sigma);
-
+    matP1(P1,Sigma);
+    /*
+    cout << " P1= ";
+    for (int i=0; i<6; i++) {
+        for (int j=0; j<6; j++) {
+            cout << "  " << P1[i][j];
+        }
+    }
+    cout << endl;
+    */
      for (int i=0; i<ntens; ++i) {
             P1Y[i] = 0.;
          for (int j=0; j<ntens; j++) {
@@ -325,6 +339,7 @@ void damageFunction(double & fd, const r1Tensor<double> &Sigma, const r1Tensor<d
 
      for (int i=0; i<ntens; ++i)
           sij[i] = P1Y[i]-1./3.*trY*e1[i];
+
 
      SS=0.;
      for (int i=0; i<ntens; ++i) {
@@ -345,7 +360,6 @@ void damageFunction(double & fd, const r1Tensor<double> &Sigma, const r1Tensor<d
     */
     //THE SIGN BEFORE alpha_ IS "+" DUE TO MECHANICAL CONVENTION
     fd = sqrt(0.5*SS)+alpha_*trY-C0_-C1_*trOmega;   
-    //cout << "    " << fd << " " << SS << " " << trY << endl;
 }
 
 void matP1(r2Tensor<double> &P1, const r1Tensor<double> &Sigma) {
@@ -385,8 +399,9 @@ void matP1(r2Tensor<double> &P1, const r1Tensor<double> &Sigma) {
     anan2[5] = h.zz[2][1]*h.zz[0][1];
     anan3[5] = h.zz[2][2]*h.zz[0][2];
 
-    for (int i=0; i<m; i++) {
-        for (int j=0; j<m; j++) {
+
+    for (int i=0; i<ntens; i++) {
+        for (int j=0; j<ntens; j++) {
             P1[i][j] = s[0] * anan1[i]*anan1[j] +
                        s[1] * anan2[i]*anan2[j] +
                        s[2] * anan3[i]*anan3[j];
@@ -407,10 +422,8 @@ void matP2(r2Tensor<double> &P2, const r1Tensor<double> &Sigma) {
     //for (int i=0; i<m; i++) {
     //    if (abs(h.wri[i].real())<tol) h.wri[i].real()=0.;
     //}
-    cout << " res = ";
     for (int i=0; i<m; i++) {
         res = h.wri[i].real()- MIN(h.wri[0].real(),MIN(h.wri[1].real(),h.wri[2].real()));
-        cout << " " << res;
         if (res>0.){
             s[i] = 1.;
         } else {
@@ -418,8 +431,6 @@ void matP2(r2Tensor<double> &P2, const r1Tensor<double> &Sigma) {
         }
         if (abs(res)<tol) s[i] = 0.;
     }
-    cout << endl;
-    cout << "stress="<<h.wri[0].real()<<" " <<h.wri[1].real()<<" "<<h.wri[2].real()<<endl;
     for (int i=0; i<m; i++) {
         anan1[i] = h.zz[i][0]*h.zz[i][0];
         anan2[i] = h.zz[i][1]*h.zz[i][1];
@@ -438,8 +449,8 @@ void matP2(r2Tensor<double> &P2, const r1Tensor<double> &Sigma) {
     anan2[5] = h.zz[2][1]*h.zz[0][1];
     anan3[5] = h.zz[2][2]*h.zz[0][2];
 
-    for (int i=0; i<m; i++) {
-        for (int j=0; j<m; j++) {
+    for (int i=0; i<ntens; i++) {
+        for (int j=0; j<ntens; j++) {
             P2[i][j] = s[0] * anan1[i]*anan1[j] +
                        s[1] * anan2[i]*anan2[j] +
                        s[2] * anan3[i]*anan3[j];
@@ -569,13 +580,14 @@ void cuttingPlaneMethod(const r1Tensor<double> &Omega, const r1Tensor<double> &S
             }
          }
      }
+    /*
     for (int i=0; i<ntens; i++){
         for(int j=0; j<ntens; j++){
             cout << " " << P2[i][j];
         }
     }
     cout << endl;
-
+    */
     for (int i=0; i<ntens; i++){
         f2p2[i]=0.;
         for (int j=0;j<ntens;j++){

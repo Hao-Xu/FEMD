@@ -16,7 +16,7 @@ int main() {
     a2 = 3.94E-11;
     a3 = -1.26E-12;
     a4 = 2.51E-12;
-    C0 = 0.E6;
+    C0 = 0.11E6;
     C1 = 2.2E6;
     alpha = 0.231;
     Debug = 0.;
@@ -45,6 +45,15 @@ int main() {
             fstrm << " " << setw(10) << stnO[i] ;
         }
         fstrm << " " << setw(10) << fd0;
+        for (int i=3; i<6; i++) {
+            fstrm << " " << setw(10) << stran[i] ;
+        }
+        for (int i=3; i<6; i++) {
+            fstrm << " " << setw(10) << stnS[i] ;
+        }
+        for (int i=3; i<6; i++) {
+            fstrm << " " << setw(10) << stnO[i] ;
+        }
         fstrm << endl;
     }
     return 0;
