@@ -11,3 +11,10 @@
 *.lai
 *.la
 *.a
+
+# Compiled result
+*.out
+*.x
+
+# vim temperary file
+*.swp

@@ -2,9 +2,9 @@
 // subroutine:
 //   A Continuum Damage Model used in FLAC3D.
 // History:
-// 2016/09/07  Hao Xu   First release 
+// 2016/09/25  Hao Xu   First release 
 
-#include "modeldsid.h"
+#include "Modeldsid.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -65,13 +65,13 @@ void Mat_dS_dOmega(r3Tensor<double> &dS_dO, const double & E0_,
 
 
     //--------------------------------------------------------------------------
-    void Modeldsid::run(r1Tensor<double> & stnE_, r1Tensor<double> & stnS_) {
+    void Modeldsid::run(r1Tensor<double> & stnE_, r1Tensor<double> & stnS_ , r1Tensor<double> & stnO_, double & fd0) {
 
         /* --- trial elastic stresses --- */
         int ntens = Omega.size();
         double zero = 0.;
         double deps = 0.;
-        double fd, fd2, XL;
+        double fd1, fd2, XL;
         int iopt, ioptfd;
         double H0, HP;
         r1Tensor<double> dG_dY(ntens), df_dSig(ntens), temp(ntens);
@@ -119,11 +119,9 @@ void Mat_dS_dOmega(r3Tensor<double> &dS_dO, const double & E0_,
                 }
             }
         }
-
         for (int i=0; i<ntens; i++) {
             Stress[i] += dSig[i];
         }
-
         stnS_[0] = Stress[0];
         stnS_[1] = Stress[1];
         stnS_[2] = Stress[2];
@@ -132,12 +130,12 @@ void Mat_dS_dOmega(r3Tensor<double> &dS_dO, const double & E0_,
         stnS_[5] = Stress[5];
 
         ioptfd = 1;
-        damageFunction(fd, Stress, Omega, E0_, Poisson0_, a1_, a2_, a3_, a4_,
+        damageFunction(fd1, Stress, Omega, E0_, Poisson0_, a1_, a2_, a3_, a4_,
                        C0_, C1_, alpha_, ioptfd);
-        if (fd > tol) {
+        if (fd1 > tol) {
             int Inc = 0;
-            double fdt = fd;
-            while(fdt>0 && ((fdt/fd)>tol && Inc < ITmax)) {
+            double fdt = fd1;
+            while(fdt>0. && (fdt/fd1)>tol && Inc < ITmax) {
                 iopt = 0;
                 if (Inc == 0) iopt =0;
                 cuttingPlaneMethod(Omega, Stress, Matdom, E0_, Poisson0_, a1_, a2_, a3_, a4_,
@@ -155,17 +153,17 @@ void Mat_dS_dOmega(r3Tensor<double> &dS_dO, const double & E0_,
                 ++Inc;
             }
             if (Inc>=ITmax) throw std::runtime_error("DSID: no convergence");
+        }
             ioptfd = 3;
             damageFunction(fd2, Stress, Omega, E0_, Poisson0_, a1_, a2_, a3_, a4_,
                            C0_, C1_, alpha_, ioptfd);
-            fd = fd2; 
+            fd0 = fd2; 
             stnS_[0] = Stress[0];
             stnS_[1] = Stress[1];
             stnS_[2] = Stress[2];
             stnS_[3] = Stress[3];
             stnS_[4] = Stress[4];
             stnS_[5] = Stress[5];
-        }
 
             Omega_00_ = Omega[0];
             Omega_11_ = Omega[1];
@@ -180,6 +178,12 @@ void Mat_dS_dOmega(r3Tensor<double> &dS_dO, const double & E0_,
             Epsid_12_ = Epsid[4];
             Epsid_20_ = Epsid[5];
 
+            stnO_[0] = Omega[0];
+            stnO_[1] = Omega[1];
+            stnO_[2] = Omega[2];
+            stnO_[3] = Omega[3];
+            stnO_[4] = Omega[4];
+            stnO_[5] = Omega[5];
             /*
             Omega[0] = Omega_00_;
             Omega[1] = Omega_11_;
@@ -188,12 +192,25 @@ void Mat_dS_dOmega(r3Tensor<double> &dS_dO, const double & E0_,
             Omega[4] = Omega_12_;
             Omega[5] = Omega_20_;
             */
-            effectiveStiffness(Matdom, Omega, E0_, Poisson0_, a1_, a2_, a3_, a4_,
-                               C0_, C1_, alpha_);
+            //effectiveStiffness(Matdom, Omega, E0_, Poisson0_, a1_, a2_, a3_, a4_,
+            //                   C0_, C1_, alpha_);
             
 
     }
 
+    void Modeldsid::printVariables(){
+        cout << " E0       = " << E0_       << endl;
+        cout << " Poisson0 = " << Poisson0_ << endl;
+        cout << " a1       = " << a1_       << endl;
+        cout << " a2       = " << a2_       << endl;
+        cout << " a3       = " << a3_       << endl;
+        cout << " a4       = " << a4_       << endl;
+        cout << " C0       = " << C0_       << endl;
+        cout << " C1       = " << C1_       << endl;
+        cout << " alpha    = " << alpha_    << endl;
+        cout << " Debug    = " << Debug_    << endl;
+
+    }
 
 void effectiveStiffness(r2Tensor<double> &Matdom, const r1Tensor<double> &Omega, const double & E0_,
                         const double & Poisson0_, const double & a1_, const double & a2_,
@@ -279,12 +296,13 @@ void damageFunction(double & fd, const r1Tensor<double> &Sigma, const r1Tensor<d
      r2Tensor<double> P1(ntens,ntens,zero);
      for (int i=0; i<3; i++) e1[i]=1;
      
-     trSigma = Sigma[1] + Sigma[2] + Sigma[3];
-     trOmega = Omega[1] + Omega[2] + Omega[3];
-
+     trSigma = Sigma[0] + Sigma[1] + Sigma[2];
+     trOmega = Omega[0] + Omega[1] + Omega[2];
+     //cout << " trSigma = " << trSigma << endl;
+     //cout << " " << Omega[0] << " " << Omega[1] << " " << Omega[2] <<  endl;
      Aik_Bkj(Sigma,Sigma,SigSig);
 
-     trSigSig = SigSig[1] + SigSig[2] + SigSig[3];
+     trSigSig = SigSig[0] + SigSig[1] + SigSig[2];
 
      for (int i=0; i<ntens; i++)
           yd1[i]= a1_*trSigma*trSigma*e1[i]+a2_*SigSig[i]+a3_*trSigma*Sigma[i]+a4_*trSigSig*e1[i];
@@ -303,7 +321,7 @@ void damageFunction(double & fd, const r1Tensor<double> &Sigma, const r1Tensor<d
          }
      }
 
-     trY = P1Y[1] + P1Y[2] + P1Y[3];
+     trY = P1Y[0] + P1Y[1] + P1Y[2];
 
      for (int i=0; i<ntens; ++i)
           sij[i] = P1Y[i]-1./3.*trY*e1[i];
@@ -327,7 +345,7 @@ void damageFunction(double & fd, const r1Tensor<double> &Sigma, const r1Tensor<d
     */
     //THE SIGN BEFORE alpha_ IS "+" DUE TO MECHANICAL CONVENTION
     fd = sqrt(0.5*SS)+alpha_*trY-C0_-C1_*trOmega;   
-
+    //cout << "    " << fd << " " << SS << " " << trY << endl;
 }
 
 void matP1(r2Tensor<double> &P1, const r1Tensor<double> &Sigma) {
@@ -389,14 +407,19 @@ void matP2(r2Tensor<double> &P2, const r1Tensor<double> &Sigma) {
     //for (int i=0; i<m; i++) {
     //    if (abs(h.wri[i].real())<tol) h.wri[i].real()=0.;
     //}
+    cout << " res = ";
     for (int i=0; i<m; i++) {
         res = h.wri[i].real()- MIN(h.wri[0].real(),MIN(h.wri[1].real(),h.wri[2].real()));
+        cout << " " << res;
         if (res>0.){
             s[i] = 1.;
         } else {
             s[i] = 0.;
         }
+        if (abs(res)<tol) s[i] = 0.;
     }
+    cout << endl;
+    cout << "stress="<<h.wri[0].real()<<" " <<h.wri[1].real()<<" "<<h.wri[2].real()<<endl;
     for (int i=0; i<m; i++) {
         anan1[i] = h.zz[i][0]*h.zz[i][0];
         anan2[i] = h.zz[i][1]*h.zz[i][1];
@@ -493,7 +516,7 @@ void cuttingPlaneMethod(const r1Tensor<double> &Omega, const r1Tensor<double> &S
     r1Tensor<double> f1p3(ntens),zeros(ntens,zero),temp1(ntens); 
     r2Tensor<double> P1(ntens,ntens), dY_dSig(ntens,ntens),eep1(ntens,ntens);
     r2Tensor<double> P3(ntens,ntens), P2(ntens,ntens), temp2(ntens,ntens);
-    r3Tensor<double> dS_dOmega; 
+    r3Tensor<double> dS_dOmega(ntens,ntens,ntens,0.); 
 
     //DATA ONE,TWO,HALF / 1.0D0,2.0D0,0.5D0 /
 
@@ -533,7 +556,9 @@ void cuttingPlaneMethod(const r1Tensor<double> &Omega, const r1Tensor<double> &S
          }   
     }
     P1yd1e=P1yd1[0]+P1yd1[1]+P1yd1[2];
-
+    //cout << " P1yd1e = " << P1yd1e << endl;
+    //cout << " yd1= ";
+    //cout << endl;
     for (int i=0; i<ntens; i++) {
         f2ij[i]=0.;
         for (int j=0; j<ntens; j++) {
@@ -544,6 +569,12 @@ void cuttingPlaneMethod(const r1Tensor<double> &Omega, const r1Tensor<double> &S
             }
          }
      }
+    for (int i=0; i<ntens; i++){
+        for(int j=0; j<ntens; j++){
+            cout << " " << P2[i][j];
+        }
+    }
+    cout << endl;
 
     for (int i=0; i<ntens; i++){
         f2p2[i]=0.;
@@ -597,6 +628,9 @@ void cuttingPlaneMethod(const r1Tensor<double> &Omega, const r1Tensor<double> &S
             dG_dY[i]=f2p2[i]/sqrt(2.0*f2f2);
         }
     }
+    //cout << " dG_dY = " << dG_dY[0] << " " << dG_dY[1] << " " << dG_dY[2] << endl;
+    //cout << " f2ij = " << f2ij[0] << " " << f2ij[1] << " " << f2ij[2] << endl;
+    //cout << " f2f2 = " << f2f2 << endl;
 
       
     for (int i=0; i<ntens; i++) {
