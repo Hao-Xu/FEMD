@@ -1,3 +1,4 @@
 theme: jekyll-theme-awesome
 # markdown: maruku
 includes_dir: _includes
+markdown: redcarpet
