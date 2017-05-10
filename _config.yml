@@ -1,2 +1,2 @@
-theme: jekyll-theme-cayman
+includes_dir: _includes
 {% include lib/mathjax.html %}
