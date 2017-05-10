@@ -1,2 +1,1 @@
 includes_dir: _includes
-{% include lib/mathjax.html %}
