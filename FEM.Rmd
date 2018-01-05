@@ -1,0 +1,393 @@
+---
+title: "FEM"
+author: "Hao"
+date: "9/26/2017"
+output:
+  html_document: default
+  pdf_document:
+    includes:
+      in_header: header.tex
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## FEM
+
+The main constitutes of a finite element method for the solution of a boundary-value problem are
+
+- The variational or weak statement of the problem;
+
+- The approximate solution of the variational equations through the use of "finite element functions."
+
+Strong form of the two-point boundary-value problem $(S)$:
+
+$$
+(S)
+\begin{cases}
+\textrm{Given $\mathscr{l}:\bar{\Omega} \rightarrow \mathbb{R}$ and constants $\mathscr{q}$ and $\mathscr{h}$, find $u:\bar{\Omega} \rightarrow \mathbb{R}$, such that} \\
+u_{,\,xx}(x)+\mathscr{l}(x)=0 \quad \textrm{on}\,\, \Omega \\
+u(1)=\mathscr{q} \\
+-u_{,\,x}(0)=\mathscr{h}
+\end{cases}
+$$
+
+The exact solution of $(S)$ is trivial to obtain, namely:
+
+$$
+u(x) = \mathscr{q} + (1 - x) \mathscr{h} + \int_x^1 \left\{ \int_0^y \mathscr{l}(x) \textrm{d}z \right\} \textrm{d}y
+$$
+
+### Weak form
+
+*Trial solutions*:
+
+$$
+\delta = \left\{ u \,|\, u \in H^1, u(1) = \mathscr{q}  \right\}
+$$
+where *$H^1$ functions*, written as $u \in H^1$, satisfy
+
+$$
+\int_{0}^1 \left( u_{, \, x} \right)^2 \textrm{d}x < \infty 
+$$
+*Weighting functions*, or *variations*:
+
+$$
+\mathscr{V} = \left\{ w \, | \, w \in H^1, w(1) = 0 \right\}
+$$
+Weak form (W):
+
+$$
+(W)
+\begin{cases}
+\textrm{Given $\mathscr{l}$, $\mathscr{q}$ and $\mathscr{h}$ as before, find $u \in \delta$ such that for all $w \in \mathscr{V}$} \\
+u(1) = \mathscr{q} \\
+w(1) = 0 \\
+\displaystyle\int_{0}^1 w_{,x} u_{,x} \textrm{d}x = \int_0^1 w \mathscr{l} \textrm{d}x +w(0)\mathscr{h}
+\end{cases}
+$$
+
+Formulations of this type are often called *virtual work*, or *virtual displacement, principles* in mechanics. The $w$'s are the *virtual displacements*. 
+
+### Proposition
+
+a. Let $u$ be a solution of ($S$). Then $u$ is also a solution of ($W$).
+
+b. Let $u$ be a solution of ($W$). Then $u$ is also a solution of ($S$).
+
+Both ($S$) and ($W$)  possess unique solutions, thus the strong and weak solutions are the same.
+
+### Remarks
+
+The boundary condition $-u_{, \, x}=\mathscr{h}$ is not explicitly mentioned in the statement of ($W$), but is implied by the satisfaction of the variational equation. Boundary conditions of this type are referred to as *natural boundary conditions*. On the other hand, trial solutions are explicitly required to satisfy the boundary condition $u(1)=\mathscr{q}$. Boundary conditions of this type are called *essential boundary conditions*
+
+*Finite element methods* are to obtain approximate solutions to the original boundary-value problem in terms of approximating $\delta$ and $\mathscr{V}$ by convenient, finite-dimensional collections of functions.
+
+Let 
+
+$$
+\begin{align}
+a(w,u) = & \int_0^1 w_{, \, x} u_{, \, x} \textrm{d}x \\
+(w, \mathscr{l}) = & \int_0^1 w \mathscr{l} \textrm{d}x
+\end{align}
+$$
+The weak form can be rewritten as
+
+$$
+a(w,u) = (w, l) + w(0)\mathscr{h}
+$$
+
+### Galerkin's aproximation method
+
+Finite-dimensional approximation functions of $\mathscr\delta$ and $\mathscr{V}$ are denoted by $\mathscr{\delta}^h$ and $\mathscr{V}^h$, respectively. The superscript refers to the association of $\delta^h$ and $\mathscr{V}^h$ with a *mesh*, or *discretization*, of the domain $\Omega$, which is parameterized by a characteristic length scale $h$. Thus, $\delta^h$ and $\mathscr{V}^h$ are subsets of $\delta$ and $\mathscr{V}$, respectively:
+
+$$
+\delta^h \subset \delta \quad \textrm{(i.e., if } u^h \in \delta^h \textrm{, then } u^h \in \delta \textrm{)} \\
+\mathscr{V}^h \subset \mathscr{V} \quad \textrm{(i.e., if } w^h \in \mathscr{V}^h \textrm{, then } w^h \in \mathscr{V} \textrm{)}
+$$
+
+which indicate:
+
+$$
+u^h (1) = \mathscr{q} \\
+w^h (0) = 0
+$$
+
+To each member $\mathscr{v}^h \in \mathscr{V}^h$, we construct a function $u^h \in \delta^h$ by
+
+$$
+u^h = \mathscr{v}^h + \mathscr{q}^h
+$$
+
+where $\mathscr{q}^h$ is a given function satisfying the essential boundary condition
+
+$$
+\mathscr{q}^h (1) = \mathscr{q}
+$$
+
+Thus, $u^h$ satisfies the requisite boundary condition
+
+$$
+\begin{align}
+u^h (1) = \ & \mathscr{v}^h (1) + \mathscr{q}^h (1) \\
+        = \ & 0 + \mathscr{q}
+\end{align}
+$$
+
+Now, in terms of $w^h \in \mathscr{V}^h$ and $u^h \in \delta^h$, the variational equation is written as
+
+$$
+a(w^h, u^h) = (w^h, \mathscr{l}) + w^h (0) \mathscr{h}
+$$
+
+where $u^h$ is an approximate (weak) solution.
+
+The bilinearity of $a(\dot, \dot)$ enables the above equation to be written as
+
+$$
+a(w^h, \mathscr{v}^h) = (w^h, \mathscr{l}) + w^h (0) \mathscr{h} - a(w^h, \mathscr{q}^h)
+$$
+
+The right-hand side consists of the totality of terms associated with given data (i.e., $\mathscr{l}$, $\mathscr{q}$, and $\mathscr{h}$). The above equation is to be used to define $\mathscr{v}^h$, the unknown part of $u^h$.
+
+The (Bubnov-) Galerkin form of the problem, denoted by ($G$), is stated as follows:
+
+$$
+(G)
+\begin{cases}
+\textrm{Given $\mathscr{l}$, $\mathscr{q}$ and $\mathscr{h}$ as before, find $u^h = \mathscr{v}^h + \mathscr{q}^h$, where $\mathscr{v}^h \in \mathscr{V}^h$}, \\
+\textrm{such that for all } w^h \in \mathscr{V}^h \\
+a(w^h, \mathscr{v}^h) = (w^h, \mathscr{l}) + w^h (0) \mathscr{h} - a(w^h, \mathscr{q}^h)
+\end{cases}
+$$
+
+($G$) is a version of ($W$) posed in terms of a finite-dimensional collection of functions, namely, $\mathscr{V}^h$. $\mathscr{q}^h$ and $\mathscr{V}^h$ have to be explicitly defined in this method.
+
+#### Matrix equations
+
+Let $\mathscr{V}^h$ consist of all linear combinations of given functions denoted by $N_A: \bar\Omega \rightarrow \mathbb{R}$, where $A = 1,2,...,n$. If $w^h \in \mathscr{V}^h$, then there exist constants $c_A$, $A = 1,2,...,n$ such that
+
+$$
+\begin{align}
+w^h = \ & \sum_{A=1}^{n} c_A N_A \\
+    = \ & c_1 N_1 + c_2 N_2 + ... + c_n N_n
+\end{align}
+$$
+
+The $N_A$ are referred to as *shape*, *basis*, or *interpolation* functions. We require that each $N_A$ satisfies
+
+$$
+N_A (1) = 0, \quad A = 1,2,...,n
+$$
+
+which satisfies $w^h (1) = 0$. $\mathscr{V}^h$ is said to have dimension $n$.
+
+To define members of $\delta^h$ we need to specify $\mathscr{q}^h$. To this end, we introduce another shape function, $N_{n+1}: \bar\Omega \rightarrow \mathbb{R}$, which has the property
+
+$$
+N_{n+1} (1) = 1
+$$
+
+(Note $N_{n+1} \notin \mathscr{V}^h$) Then $\mathscr{q}^h$ is given by
+
+$$
+\mathscr{q}^h = \mathscr{q} N_{n+1}
+$$
+
+and thus $\mathscr{q}^h (1) = \mathscr{q}$.
+
+With these definitions, a typical $u^h \in \delta^h$ may be written as
+
+$$
+\begin{align}
+u^h = \ & \mathscr{v}^h + \mathscr{q}^h \\
+    = \ & \sum_{A = 1}^{n} d_A N_A + \mathscr{q} N_{n+1}
+\end{align}
+$$
+The Galerkin equation yields
+
+$$
+a \left( \sum_{A = 1}^{n} c_A N_A, \sum_{B = 1}^{n} d_B N_B \right) = 
+\left( \sum_{A = 1}^{n} c_A N_A, \mathscr{l} \right) +
+\left[ \sum_{A = 1}^{n} c_A N_A (0) \right] \mathscr{h} -
+a \left( \sum_{A = 1}^{n} c_A N_A, \mathscr{q} N_{n + 1} \right)
+$$
+
+which indicates
+
+$$
+\sum_{B = 1}^{n} a \left( N_A, N_B \right) d_B = \left( N_A, \mathscr{l} \right) +
+N_A (0) \mathscr{h} - a \left( N_A, N_{n + 1} \right) \mathscr{q}
+$$
+
+Note that everything is known except the $d_B$'s. Thus it constitutes a system of $n$ equations in $n$ unknowns.
+
+Let
+
+$$
+\begin{align}
+K_{AB} = \ & a \left(N_A, N_B\right) \\
+F_A = \ & \left(N_A ,\mathscr{l} \right) + N_A (0) \mathscr{h} - a\left( N_A, N_{n + 1} \right) \mathscr{q} 
+\end{align}
+$$
+
+Then the equation becomes
+
+$$
+\begin{align}
+\sum_{B = 1}^{n} K_{AB} d_B = \ & F_A, \quad A = 1,2,...,n \quad \textrm{or} \\
+\boldsymbol{K} \boldsymbol{d} = \ & \boldsymbol{F}
+\end{align}
+$$
+
+The solution if $\boldsymbol{d} = \boldsymbol{K}^{-1} \boldsymbol{F}$ (assuming the inverse of $\boldsymbol{K}$, $\boldsymbol{K}^{-1}$, exists). Once $\boldsymbol{d}$ is known, the solution may be obtained at any point $x \in \Omega$
+
+$$
+u^h (x) = \sum_{A = 1}^{n} d_A N_A (x) + \mathscr{q} N_{n + 1} (x)
+$$
+
+The shape functions are defined as follows: Associated to a typical internal node (i.e. $2 \le A \le n$)
+
+$$
+N_A (x) =
+\begin{cases}
+\dfrac{(x - x_{A - 1})}{h_{A - 1}}, & \quad x_{A - 1} \le x \le x_A \\
+\dfrac{(x_{A + 1} - x_A)}{h_A}, & \quad x_{A} \le x \le x_{A - 1} \\
+0 , & \quad \textrm{elsewhere} 
+\end{cases}
+$$
+whereas for the boundary nodes we have 
+
+$$
+N_1 (x) = \frac{x_2 - x}{h_1}, \quad x_1 \le x \le x_2
+$$
+
+$$
+N_{n + 1} (x) = \frac{x - x_n}{h_n}, \quad x_n \le x \le x_{n + 1}
+$$
+
+Note that $N_A (x_B) = \delta_{AB}$ where $\delta_{AB}$ is the Kronecker delta (i.e., $\delta_{AB} = 1$ if $A = B$, whereas $\delta_{AB} = 0$ if $A \neq B$)
+
+#### Linear finite element (global description)
+
+$$
+\begin{align}
+(g1) & \quad \textrm{Domain:} & [x_A, x_{A + 1}] \\
+(g2) & \quad \textrm{Nodes:} & \{x_A, x_{A + 1}\} \\
+(g3) & \quad \textrm{Degree of freedom:} & \{d_A, d_{A + 1}\} \\
+(g4) & \quad \textrm{Shape functions:} & \{N_A, N_{A + 1}\} \\
+(g5) & \quad \textrm{Interpolation functions:} &  \\
+\end{align}
+$$
+
+$$
+u^h (x) = N_A (x) d_A + N_{A + 1} (x) d_{A + 1}, \quad x \in [x_A, x_{A + 1}]
+$$
+
+#### Linear finite element (local description)
+
+$$
+\begin{align}
+(l1) & \quad \textrm{Domain:} & [\xi_1, \xi_2] \\
+(l2) & \quad \textrm{Nodes:} & \{\xi_1, \xi_2\} \\
+(l3) & \quad \textrm{Degree of freedom:} & \{d_1, d_2\} \\
+(l4) & \quad \textrm{Shape functions:} & \{N_1, N_2\} \\
+(l5) & \quad \textrm{Interpolation functions:} &  \\
+\end{align}
+$$
+
+$$
+u^h (\xi) = N_1 (\xi) d_1 + N_{A + 1} (\xi) d_2
+$$
+
+$\xi : [x_A, x_{A + 1}] \rightarrow [\xi_1, \xi_2]$, such that $\xi (x_A) = \xi_1$ and $\xi (x_{A + 1}) = \xi_2$. It is standard practice to take $\xi_1 = -1$ and $\xi_2 = +1$.
+
+In terms of $\xi$, the shape functions in the local description take on a standard form
+
+$$
+N_a (\xi) = \frac{1}{2} \left(1 + \xi_a \xi \right), \quad a = 1,2
+$$
+Or
+
+$$
+N_1 (\xi) = \frac{1}{2} (1 - \xi), \quad N_2 (\xi) = \frac{1}{2} (1 + \xi)
+$$
+
+$$
+x^e (\xi) = \sum_{a = 1}^2 N_a (\xi) x_a^e
+$$
+
+$$
+N_{a, \, \xi} = \frac{\xi_a}{2} = \frac{(-1)^a}{2}
+$$
+
+$$
+x_{, \, \xi}^e = \frac{h^e}{2}
+$$
+
+#### Change of Variables Formula (One-Dimensional Version)
+
+Let $f:[x_1, \, x_2] \rightarrow \mathbb{R}$ be an integrable function and let $x:[\xi_1, \, \xi_2] \rightarrow [x_1, \, x_2]$ be continuously differentiable, with $x(\xi_1) = x_1$ and $x(\xi_2) = x_2$. Then
+
+$$
+\int_{x_1}^{x_2} f(x) \textrm{d}x = \int_{\xi_1}^{\xi_2} f \left( x(\xi) \right) \, x_{, \, \xi} (\xi) \textrm{d} \xi 
+$$
+
+Thus
+
+
+$$
+\boldsymbol{k}^e = \frac{1}{h^e} 
+\left[
+    \begin{array}{cc}
+         1 & -1 \\
+        -1 &  1
+    \end{array}
+\right]
+$$
+
+#### Bernoulli-Euler Beam theory
+
+The strong form of a boundary-value problem for a thin beam fixed at once and subjected to a shear force and moment at the other end, may be stated as follows:
+
+Let the beam occupy the unit interval (i.e., $\Omega = ]0, \, 1[$, $\bar\Omega = [0, \, 1]$)
+
+$$
+(S)
+\left\{
+\begin{array}{rl}
+\textrm{Given $\mathscr{l}:\bar{\Omega} \rightarrow \mathbb{R}$} & \!\!\!\!
+\textrm{  and constants $M$ and $Q$, find $u:\bar{\Omega} \rightarrow \mathbb{R}$, such that} \\
+EI \, u_{, \, xxxx} = & \!\!\!\! 
+\mathscr{l} \textrm{ on } \Omega \quad \textrm{(transverse equilibrium)} \\
+u(1) = & \!\!\!\! 0 \quad \textrm{(zero transverse displacement)} \\
+u_{, \, x}(0) = & \!\!\!\! 0 \quad \textrm{(zero slope)} \\
+EI \, u_{, \, xx}(0) = & \!\!\!\! M \quad \textrm{(prescribed moment)} \\
+EI \, u_{, \, xxx}(0) = & \!\!\!\! Q \quad \textrm{(prescribed shear)}
+\end{array}
+\right.
+$$
+
+where $E$ is Young's modulus and $I$ is the moment of inertia, both of which are assumed to be constant.
+
+
+Let $\delta = \mathscr{V} = \left\{ w \, | \, w \in H^2(\Omega), \, w(1) = w_{, \, x}(1) = 0 \right\}$. Then a corresponding weak form of the problem is:
+
+$$
+(W)
+\begin{cases}
+\textrm{Given $\mathscr{l}$, $M$, and $Q$, ding $u \in \delta$ such that for all $w \in \mathscr{V}$} \\
+a(w, \, u) = (w, \, \mathscr{l}) - w_{, \, x}(0) M + w(0) Q
+\end{cases}
+$$
+
+where
+
+$$
+\begin{align}
+a(w, \, u) = & \int_0^1 w_{,\,xx} \, EI \, u_{, \, xx} \textrm{d}x \\
+(w, \, l) = & \int_0^1 w \mathscr{l} \textrm{d}x
+\end{align}
+$$
